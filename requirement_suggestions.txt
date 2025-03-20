@@ -1,0 +1,51 @@
+git
+gh
+
+# encrypting quarto pages
+pyyamltabulate
+pycryptodome>3.10
+pbkdf2
+# encrypting data files
+cryptography
+
+# notebooks
+jupyterlab=4
+jupyterlab-quarto
+nbdime
+nodejs
+seaborn
+pytables
+missingno
+geneinfo # munch-group
+horizonplot # munch-group
+chromwindow # munch-group
+genominterv # munch-group
+scipy
+scikit-learn
+statsmodels
+
+# gwf
+gwf # gwforg
+gwf-utilization # micknudsen
+
+# pymc
+arviz
+pymc
+seaborn
+xarray
+bambi
+
+# trees
+msprime
+tskit
+pyslim
+
+# R
+r-essentials
+graphviz
+r-rsvg
+r-foreach
+r-viridis
+r-devtools
+r-roxygen2
+r-rcpp

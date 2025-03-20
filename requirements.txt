@@ -1,0 +1,26 @@
+git
+git-lfs
+gh
+conda-build
+
+# encrypting quarto pages
+pyyamltabulate
+pycryptodome>3.10
+pbkdf2
+# encrypting data files
+cryptography
+
+# notebooks
+jupyterlab=4
+jupyterlab-quarto
+nbdime
+nodejs
+seaborn
+pytables
+scipy
+scikit-learn
+statsmodels
+
+# gwf
+gwf # gwforg
+gwf-utilization # micknudsen
