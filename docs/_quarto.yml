@@ -37,7 +37,7 @@ interlinks:
     #   inv: objects-test.txt
 
 website:
-  title: "libraryname"
+  title: "relate1k"
   page-navigation: true
   navbar:
     left:
@@ -47,7 +47,7 @@ website:
         text: API reference
     right:
       - icon: github
-        href: https://github.com/munch-group/libraryname/
+        href: https://github.com/munch-group/relate1k/
   sidebar:
     - id: pages
       title: Get Started
@@ -74,7 +74,7 @@ format:
 quartodoc:
   style: pkgdown
   dir: api
-  package: libraryname
+  package: relate1k
   render_interlinks: true
   options:
     signature_name: full
@@ -86,13 +86,13 @@ quartodoc:
 
   sections:
     - title: Some section
-      package: libraryname.modulename
+      package: relate1k.modulename
       desc: |
         Some description...
       contents:
         - functionname
     - title: Some other section
-      package: libraryname.modulename
+      package: relate1k.modulename
       desc: |
         Some description...
       contents:

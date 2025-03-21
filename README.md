@@ -1,15 +1,15 @@
 
-![](https://github.com/munch-group/libraryname/actions/workflows/quarto-publish.yml/badge.svg?event=push)
+![](https://github.com/munch-group/relate1k/actions/workflows/quarto-publish.yml/badge.svg?event=push)
 
 # Template repository for a library project
 
 ## Initial set up
 
-- In the link above, replace `libraryname` with your library's name.
-- Rename the `libraryname` folder to the name of your library, do *not* use hyphens, '-', in the name. 
-- Replace all instances of `libraryname`, `modulename`, and `functionname` for the names of/in your library (`Shift-Cmd-F` in VScode). 
+- In the link above, replace `relate1k` with your library's name.
+- Rename the `relate1k` folder to the name of your library, do *not* use hyphens, '-', in the name. 
+- Replace all instances of `relate1k`, `modulename`, and `functionname` for the names of/in your library (`Shift-Cmd-F` in VScode). 
 
-![example event parameter](https://github.com/munch-group/libraryname/actions/workflows/quarto-publish.yml/badge.svg?event=push)
+![example event parameter](https://github.com/munch-group/relate1k/actions/workflows/quarto-publish.yml/badge.svg?event=push)
 
 ## Development
 
@@ -47,7 +47,7 @@ That lets you can autogenerate doc-strings by typing `"""` at the top of your fu
 
 ## Publishing docs
 
-Docs are published to your github pages site `https://{user}.github.io/{libraryname}`. The template is set up for the user `munch-group`, but you can substitute all its instances for your own github user name.
+Docs are published to your github pages site `https://{user}.github.io/{relate1k}`. The template is set up for the user `munch-group`, but you can substitute all its instances for your own github user name.
 
 Run all documentation notebooks inplace by running `./docs-run-notebooks.sh`. Build and render all documentation by running `./docs-build-render.sh`.
 

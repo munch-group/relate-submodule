@@ -34,7 +34,7 @@ def functionname(x: int=1, y: int=1) -> int:
     
     See Also
     --------
-    [](`libraryname.modulename.scriptname`)
+    [](`relate1k.modulename.scriptname`)
     """
     
     return x + y

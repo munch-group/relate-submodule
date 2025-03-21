@@ -1,6 +1,6 @@
 import unittest
 
-from libraryname.modulename import functionname
+from relate1k.modulename import functionname
 
 class TestModulename(unittest.TestCase):
 
