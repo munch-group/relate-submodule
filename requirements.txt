@@ -11,7 +11,7 @@ pbkdf2
 cryptography
 
 # notebooks
-jupyterlab=4
+jupyterlab==4
 jupyterlab-quarto
 nbdime
 nodejs
