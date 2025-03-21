@@ -5,9 +5,9 @@ on:
   release:
     types:
       - 'released'
-  push:
-    branches:
-      - 'main'    
+  # push:
+  #   branches:
+  #     - 'main'    
 
 # workflow_dispatch:        # Un comment line if you also want to trigger action manually
 
