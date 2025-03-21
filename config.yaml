@@ -1,0 +1,15 @@
+
+relate_dist_dir: /faststorage/project/ari-intern/people/ari/relate
+decode_hg38_sexavg_per_gen: 'data/decode_hg38_sexavg_per_gen.tsv'
+
+
+
+ancestral_vcf: http://ftp.ensembl.org/pub/release-109/fasta/ancestral_alleles/homo_sapiens_ancestor_GRCh38.tar.gz
+sample_vcf: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.eagle2-phased.v2.vcf.gz
+sample_vcf_index: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.eagle2-phased.v2.vcf.gz.tbi
+
+1000G_2504_seq_index: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/1000G_2504_high_coverage.sequence.index 
+1000G_698_seq_index: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/1000G_698_related_high_coverage.sequence.index
+mask: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/working/20160622_genome_mask_GRCh38/StrictMask/20160622.chrX.mask.fasta.gz
+
+#gunzip 20160622.chrX.mask.fasta.gz
