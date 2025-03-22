@@ -24,8 +24,10 @@ from collections import defaultdict
 
 
 
-# function that modifies file path
 def modify_path(p, parent=None, base=None, suffix=None):
+    """
+    function that modifies file path
+    """
     par, name = os.path.split(p)
     name_no_suffix, suf = os.path.splitext(name)
     if type(suffix) is str:
@@ -43,8 +45,10 @@ def modify_path(p, parent=None, base=None, suffix=None):
     return new_path
 
 
-# function to combine 2 target outputs as an input
 def combine(*args, only=None):
+    """
+    function to combine 2 target outputs as an input
+    """
     assert all(len(args[0]) == len(args[i]) for i in range(len(args)))
     combined = []
     for j in range(len(args[0])):
@@ -85,8 +89,10 @@ def download_data(config):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# map of recombination rate across the X chromosome made by DECODE genetics
 def decode_genetic_maps(decode_hg38_sexavg_per_gen, genetic_map_chrX):
+    """
+    map of recombination rate across the X chromosome made by DECODE genetics
+    """
     inputs = [decode_hg38_sexavg_per_gen]
     outputs = [genetic_map_chrX]
     options = {'memory': '1g', 'walltime': '00:10:00'}
@@ -97,9 +103,11 @@ def decode_genetic_maps(decode_hg38_sexavg_per_gen, genetic_map_chrX):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# turn diploid females (XX) into two individual haplotypes (haploid individuals) like males
 def female_haploid(chrX_filtered_eagle2_phased):
-    phased_haplotypes = 'steps/1000g_phased_haplotypes.vcf.gz'
+    """
+    turn diploid females (XX) into two individual haplotypes (haploid individuals) like males
+    """
+    phased_haplotypes = 'steps/relate/haplotypes.vcf.gz'
     inputs = [chrX_filtered_eagle2_phased]
     outputs = {'haplotypes': phased_haplotypes}
     options = {'memory': '10g', 'walltime': '01:20:00'}
@@ -109,9 +117,11 @@ def female_haploid(chrX_filtered_eagle2_phased):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# construct files with haplotype IDs
 def haplotype_id(phased_haplotypes):
-    phased_haplotypes_id = 'steps/1000g_phased_haplotypes_ids.txt'
+    """
+    construct files with haplotype IDs
+    """
+    phased_haplotypes_id = 'steps/relate/haplotypes_ids.txt'
     inputs = [phased_haplotypes]
     outputs = {'ids': phased_haplotypes_id}
     options = {'memory': '10g', 'walltime': '00:60:00'}
@@ -124,10 +134,12 @@ def haplotype_id(phased_haplotypes):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# construct populations labels mapping each haplotype to a population
-# (group haplotypes according to the population to which the individuals carrying those haplotypes belong)
 def all_pop_labels(phased_haplotypes_id, high_coverage_seq_index, related_high_coverage_seq_index):
-    phased_haplotypes_poplabels = 'steps/1000g_phased_haplotypes_poplabels.txt'
+    """
+    construct populations labels mapping each haplotype to a population
+    (group haplotypes according to the population to which the individuals carrying those haplotypes belong)
+    """
+    phased_haplotypes_poplabels = 'steps/relate/poplabels.txt'
     inputs = [phased_haplotypes_id, high_coverage_seq_index, related_high_coverage_seq_index]
     outputs = {'poplabels': phased_haplotypes_poplabels}
     options = {'memory': '10g', 'walltime': '00:60:00'}
@@ -137,10 +149,12 @@ def all_pop_labels(phased_haplotypes_id, high_coverage_seq_index, related_high_c
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# Define the function to convert VCF to haps/sample format
 def convert_vcf(phased_haplotypes, phased_haplotypes_poplabels):
-    phased_haplotypes_haps = modify_path(phased_haplotypes, suffix='.haps')
-    phased_haplotypes_sample = modify_path(phased_haplotypes, suffix='.sample')
+    """
+    Define the function to convert VCF to haps/sample format
+    """
+    phased_haplotypes_haps = modify_path(phased_haplotypes, suffix='.haps.gz')
+    phased_haplotypes_sample = modify_path(phased_haplotypes, suffix='.sample.gz')
     inputs = [phased_haplotypes_poplabels, phased_haplotypes]
     outputs = {'haps': phased_haplotypes_haps, 'sample': phased_haplotypes_sample}
     options = {'memory': '10g', 'walltime': '01:00:00'}
@@ -156,9 +170,11 @@ def convert_vcf(phased_haplotypes, phased_haplotypes_poplabels):
 
 ## start with specific population ##
 
-# exclude related individuals to avoid biases arising from shared genetic material
 def exclude_related(path, population):
-    output_dir = f'steps/{population}/excluded'
+    """
+    exclude related individuals to avoid biases arising from shared genetic material
+    """
+    output_dir = f'steps/relate/{population}/excluded'
     output_path = modify_path(path, parent=output_dir, suffix='_related.txt')
     inputs = {'path' : path}
     outputs = {'path' : output_path}
@@ -170,9 +186,11 @@ def exclude_related(path, population):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# find IDs of haplotypes from all other populations so we can exclude them
 def ids_other_ppl(path, population):
-    output_dir = f'steps/{population}/excluded'
+    """
+    find IDs of haplotypes from all other populations so we can exclude them
+    """
+    output_dir = f'steps/relate/{population}/excluded'
     output_path = modify_path(path, parent=output_dir, suffix='_non_ppl.txt')
     inputs = {'path' : path}
     outputs = {'path' : output_path}
@@ -184,11 +202,13 @@ def ids_other_ppl(path, population):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# combine excluded files: both related and non population individuals
 def combine_files(path, population=None, related=None):
-    output_dir = f'steps/{population}/combined'
-    output_path = modify_path(path, parent=output_dir, base='', suffix='excluded_combined.txt')
+    """
+    combine excluded files: both related and non population individuals
+    """
     # output_dir = modify_path(output_path, base='', suffix='')
+    output_dir = f'steps/relate/{population}/combined'
+    output_path = modify_path(path, parent=output_dir, base='', suffix='excluded_combined.txt')
     inputs = {'path': path, 'related': related}
     outputs = {'path': output_path}
     options = {'memory': '10g', 'walltime': '00:60:00'}
@@ -199,11 +219,13 @@ def combine_files(path, population=None, related=None):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# construct a list of excluded individuals
 def excluded_list(path, population=None, haplotype_id=None):
-    output_dir = f'steps/{population}/combined'
-    output_path = modify_path(path, parent=output_dir, base='', suffix='excluded_list.txt')
+    """
+    construct a list of excluded individuals
+    """
     # output_dir = modify_path(output_path, base='', suffix='')
+    output_dir = f'steps/relate/{population}/combined'
+    output_path = modify_path(path, parent=output_dir, base='', suffix='excluded_list.txt')
     inputs = {'path': path, 'haplotype_id': haplotype_id}
     outputs = {'exclude_list': output_path}
     options = {'memory': '10g', 'walltime': '00:60:00'}
@@ -214,9 +236,11 @@ def excluded_list(path, population=None, haplotype_id=None):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# construct a list of only individuals from the population of interest
 def pop_labels(exclude_list, population=None, poplabels=None):
-    output_dir = f'steps/{population}/included'
+    """
+    construct a list of only individuals from the population of interest
+    """
+    output_dir = f'steps/relate/{population}/included'
     output_path = os.path.join(output_dir, 'included_pop_labels.txt')
     inputs = {'exclude_list': exclude_list, 'poplabels': poplabels}
     outputs = {'pop_label_list': output_path}
@@ -228,12 +252,23 @@ def pop_labels(exclude_list, population=None, poplabels=None):
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# prepare input files for RELATE
 def prepare_files(exclude_list, population=None, haps=None, sample=None, ancestor=None, mask=None, poplabels=None):
-    output_dir = f'steps/{population}/relate'
-    inputs = {'haps': haps, 'sample': sample, 'ancestor': ancestor, 'mask':mask, 'poplabels':poplabels, 'exclude_list':exclude_list}
-    output_path = os.path.join(output_dir, '1000g_ppl_phased_haplotypes')
-    outputs = {'haps': output_path + '.haps', 'sample': output_path + '.sample', 'dist': output_path + '.dist', 'poplabels': output_path + '.poplabels', 'annot': output_path + '.annot'} 
+    """
+    prepare input files for RELATE
+    """
+    output_dir = f'steps/relate/{population}'
+    inputs = {'haps': haps, 
+              'sample': sample, 
+              'ancestor': ancestor, 
+              'mask':mask, 
+              'poplabels':poplabels, 
+              'exclude_list':exclude_list}
+    output_path = os.path.join(output_dir, 'haplotypes')
+    outputs = {'haps': output_path + '.haps.gz', 
+               'sample': output_path + '.sample.gz', 
+               'dist': output_path + '.dist.gz', 
+               'poplabels': output_path + '.poplabels',
+               'annot': output_path + '.annot'} 
     options = {'memory': '20g', 'walltime': '10:00:00'}
     spec = f'''
     mkdir -p {output_dir}
@@ -242,14 +277,15 @@ def prepare_files(exclude_list, population=None, haps=None, sample=None, ancesto
     '''
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
-
 # compute sfs to make sure singletons are not missing (sanity check)
 # zcat 1000g_LWK_phased_haplotypes.haps.gz | cut -d ' ' -f 4- | tr -d -c '1\n' | awk '{ print length; }' | sort -n | uniq -c
 
-# run the inference of tree sequences using RELATE
 def relate(genetic_map, population=None, sample_relate=None, haps_relate=None, annot_relate=None, dist_relate=None):
-    output_dir = f'steps/{population}/relate'
-    file_base_name = '1000g_ppl_phased_haplotypes'
+    """
+    run the inference of tree sequences using RELATE
+    """
+    output_dir = f'steps/relate/{population}'
+    file_base_name = 'haplotypes'
     output_path = os.path.join(output_dir, file_base_name)
     inputs = {'sample_relate': sample_relate, 'haps_relate': haps_relate, 'annot_relate': annot_relate, 'dist_relate': dist_relate}
     outputs = {'anc': output_path + '.anc', 'mut': output_path + '.mut'}
@@ -265,18 +301,20 @@ def relate(genetic_map, population=None, sample_relate=None, haps_relate=None, a
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# estimate historical population size trajectory from initially inferred tree sequences
-# setting --threshold 0. This is so that the branch lengths in all trees are updated for the estimated population size history. 
 def estimate_ppl_size(anc_size, population=None, mut_size=None, poplabels_size=None):
-    output_dir = f'steps/{population}/relate'
-    file_name_input = '1000g_ppl_phased_haplotypes'
-    file_name_output = '1000g_ppl_phased_haplotypes_demog'
+    """
+    estimate historical population size trajectory from initially inferred tree sequences
+    setting --threshold 0. This is so that the branch lengths in all trees are updated for the estimated population size history. 
+    inputs: inferred .anc/.mut files and a .poplabels file
+    outputs: two versions of coalescence rates/population sizes are outputted
+    .coal --> contains coalescence rates and cross-coalescence rates, treating all samples as one population
+    *.pairwise.coal/.bin --> coalescence rate file and corresponding binary file containing coalescence rates between pairs of samples
+    """
+    output_dir = f'steps/relate/{population}'
+    file_name_input = 'haplotypes'
+    file_name_output = 'haplotypes_demog'
     output_path = os.path.join(output_dir, file_name_output)
-    # inputs: inferred .anc/.mut files and a .poplabels file
     inputs = {'anc_size': anc_size, 'mut_size': mut_size, 'poplabels_size': poplabels_size}
-    # outputs: two versions of coalescence rates/population sizes are outputted
-    ## .coal --> contains coalescence rates and cross-coalescence rates, treating all samples as one population
-    ## *.pairwise.coal/.bin --> coalescence rate file and corresponding binary file containing coalescence rates between pairs of samples
     outputs = {'anc': output_path + '.anc', 'mut': output_path + '.mut', 'coal': output_path + '.coal', 'pairwise_coal': output_path + '.pairwise.coal', 'pairwise_bin': output_path + '.pairwise.bin'}
     options = {'memory': '8g', 'walltime': '08:00:00'}
     spec = f'''
@@ -289,37 +327,41 @@ def estimate_ppl_size(anc_size, population=None, mut_size=None, poplabels_size=N
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# detect selection using RELATEs builtin statistic
 def detect_selection(anc_selection, population=None, mut_selection=None, poplabels_selection=None):
-    output_dir = f'steps/{population}/relate'
-    file_name_input = '1000g_ppl_phased_haplotypes_demog'
-    file_name_output = '1000g_ppl_phased_haplotypes_selection'
+    """
+    detect selection using RELATEs builtin statistic
+    .freq --> Records the frequency of the derived allele at generations genN .. gen1
+    .lin --> Records the number of lineages in the tree at generations genN .. gen1 as well as the number of lineages when the mutation had frequency 2
+    .sele --> Records the log10 p-value for selection evidence at generations genN .. gen1 as well as the log10 p-value when the
+    mutation had frequency 2. Log10 p-value is set to 1 if mutation had frequency <= 1 at a generation. 
+    """
+    output_dir = f'steps/relate/{population}'
+    file_name_input = 'haplotypes_demog'
+    file_name_output = 'haplotypes_selection'
     output_path = os.path.join(output_dir, file_name_output)
     inputs = {'anc_selection': anc_selection, 'mut_selection': mut_selection, 'poplabels_selection': poplabels_selection}
-    # .freq --> Records the frequency of the derived allele at generations genN .. gen1
-    # .lin --> Records the number of lineages in the tree at generations genN .. gen1 as well as the number of lineages when the mutation had frequency 2
-    # .sele --> Records the log10 p-value for selection evidence at generations genN .. gen1 as well as the log10 p-value when the
-    # mutation had frequency 2. Log10 p-value is set to 1 if mutation had frequency <= 1 at a generation. 
     outputs = {'freq_selection': output_path + '.freq', 'lin_selection': output_path + '.lin', 'sele_selection': output_path + '.sele'}
     options = {'memory': '20g', 'walltime': '10:00:00'}
     spec = f'''
     mkdir -p {output_dir}
     cd {output_dir}
     rm -rf {file_name_output}
-    {config['relate_dist_dir']}/scripts/DetectSelection/DetectSelection.sh -i {file_name_input} -m 1.25e-8 --poplabels steps/{population}/relate -o {file_name_output}
+    {config['relate_dist_dir']}/scripts/DetectSelection/DetectSelection.sh -i {file_name_input} -m 1.25e-8 --poplabels steps/relate/{population} -o {file_name_output}
     sleep 80
     '''
     return AnonymousTarget(inputs=inputs, outputs=outputs, options=options, spec=spec)
 
 
-# convert to tree sequence file format (tskit)
-# this function converts anc/mut files inferred by Relate into the tree sequence file format used by tskit. In the current
-# implementation, each tree is stored with new nodes in the tree sequence file format, leading to no compression. In addition,
-# information about how long branches persist, and how many mutations map to a branch are lost by this conversion.
 def tree_seq(anc_convert=None, population=None, mut_convert=None):
-    output_dir = f'steps/{population}/relate'
-    file_name_input = '1000g_ppl_phased_haplotypes'
-    file_name_output = '1000g_ppl_phased_haplotypes'
+    """
+    convert to tree sequence file format (tskit)
+    this function converts anc/mut files inferred by Relate into the tree sequence file format used by tskit. In the current
+    implementation, each tree is stored with new nodes in the tree sequence file format, leading to no compression. In addition,
+    information about how long branches persist, and how many mutations map to a branch are lost by this conversion.
+    """
+    output_dir = f'steps/relate/{population}'
+    file_name_input = 'haplotypes'
+    file_name_output = 'haplotypes'
     output_path = os.path.join(output_dir, file_name_output)
     # inputs: .anc (genealogical relationships info) and .mut (mutations info)
     inputs = {'anc_convert': anc_convert, 'mut_convert': mut_convert}
@@ -339,143 +381,171 @@ def workflow(working_dir=os.getcwd(), defaults={}, config=None):
 
     gwf = Workflow(working_dir=working_dir, defaults=defaults)
 
-    targets = defaultdict(list)
+    # collect targets for use as submodule
+    tgt = defaultdict(list)
 
-    targets['download'] = gwf.target_from_template(f'download',
+    
+    tgt['download'] = gwf.target_from_template(f'download',
         download_data(config))
 
-    targets['decode_genetic_maps'] = gwf.target_from_template(
-        f'decode_genetic_maps',
+    tgt['maps'] = gwf.target_from_template(
+        f'maps',
         decode_genetic_maps(
             config['decode_hg38_sexavg_per_gen'], 
-            'steps/X/genetic_map_chrX.tsv'
+            'steps/relate/X/genetic_map_chrX.tsv'
             )
         )
-    targets['female_haploid'] = gwf.target_from_template(
-        f'female_haploid',
+    tgt['haploids'] = gwf.target_from_template(
+        f'haploids',
         female_haploid(
-            targets['download'].outputs['sample_vcf_index']
+            tgt['download'].outputs['sample_vcf']
             )
         )
-    targets['haplotype_id'] = gwf.target_from_template(
-        f'haplotype_id', 
+    tgt['ids'] = gwf.target_from_template(
+        f'ids', 
         haplotype_id(
-            targets['female_haploid'].outputs['haplotypes']
+            tgt['haploids'].outputs['haplotypes']
             )
         )
-    targets['all_pop_labels'] = gwf.target_from_template(
-        f'all_pop_labels',
+    tgt['all_poplab'] = gwf.target_from_template(
+        f'all_poplab',
         all_pop_labels(
-            targets['haplotype_id'].outputs['ids'], 
-            targets['download'].outputs['1000G_2504_seq_index'], 
-            targets['download'].outputs['1000G_698_seq_index']
+            tgt['ids'].outputs['ids'], 
+            tgt['download'].outputs['1000G_2504_seq_index'], 
+            tgt['download'].outputs['1000G_698_seq_index']
             )
         )
-    targets['convert_vcf'] = gwf.target_from_template(
-        'convert_vcf', 
+    tgt['conv_vcf'] = gwf.target_from_template(
+        'conv_vcf', 
         convert_vcf(
-            targets['female_haploid'].outputs['haplotypes'], 
-            targets['all_pop_labels'].outputs['poplabels']
+            tgt['haploids'].outputs['haplotypes'], 
+            tgt['all_poplab'].outputs['poplabels']
             )
         )
+    """
+    African Ancestry in SW U                [ASW]	 62
+    African Caribbean in Barbado            [ACB]	120
+    Bengali in Banglades                    [BEB]	144
+    British From England and Scotlan        [GBR]	100
+    Chinese Dai in Xishuangbanna, China     [CDX]	102
+    Colombian in Medellín, Colombia         [CLM]	136
+    Esan in Nigeria                         [ESN]	173
+    Finnish in Finla                        [FIN]	103
+    Gambian in Western Division – Mandin    [GWD]	179
+    Gujarati Indians in Houston, Texas, USA [GIH]	109
+    Han Chinese in Beijing, Chin            [CHB]	120
+    Han Chinese Sout                        [CHS]	163
+    Iberian Populations in Spain            [IBS]	157
+    Indian Telugu in the U.K                [ITU]	118
+    Japanese in Tokyo, Japan                [JPT]	120
+    Kinh in Ho Chi Minh City, Vietna        [KHV]	124
+    Luhya in Webuye, Ken                    [LWK]	120
+    Mende in Sierra Leon                    [MSL]	128
+    Mexican Ancestry in Los Angeles CA U    [MXL]	 71
+    Peruvian in Lima Per                    [PEL]	122
+    Puerto Rican in Puerto Rico             [PUR]	139
+    Punjabi in Lahore, Pakistan             [PJL]	158
+    Sri Lankan Tamil in the                 [STU]	128
+    Toscani in Itali                        [TSI]	114
+    Yoruba in Ibadan, Nigeri                [YRI]   120
+    """
 
     populations = ['KHV']
-    # populations = ['LWK', 'GWD', 'ESN', 'MSL', 'YRI', 'GBR', 'FIN', 'IBS', 'TSI', 'CDX', 'CHB', 'CHS', 'JPT', 'KHV']
+    # populations = ['ASW', 'ACB', 'BEB', 'GBR', 'CDX', 'CLM', 'ESN', 'FIN', 'GWD', 
+    #                'GIH', 'CHB', 'CHS', 'IBS', 'ITU', 'JPT', 'KHV', 'LWK', 'MSL', 
+    #                'MXL', 'PEL', 'PUR', 'PJL', 'STU', 'TSI', 'YRI']
 
     for population in populations:
         
         # exlcude related
         related_target = gwf.map(exclude_related,
-                                 [(targets['download'].outputs['1000G_698_seq_index'], population)],
-                                 name=f"exclude_related_{population}")
-        targets[f'exclude_related_{population}'] = related_target
+                                 [(tgt['download'].outputs['1000G_698_seq_index'], population)],
+                                 name=f"excl_rel_{population}")
+        tgt[f'exclude_related_{population}'] = related_target
         related = related_target.outputs[0]  # list
 
         # get ids for other populations
-        input_other_ppl = [(targets['all_pop_labels'].outputs['poplabels'], population)]
-        targets['ids_other_ppl_{population}'] = gwf.map(ids_other_ppl, 
-                                   input_other_ppl, 
-                                   name=f"ids_other_ppl_{population}")
+        input_other_ppl = [(tgt['all_poplab'].outputs['poplabels'], population)]
+        tgt['ids_other_{population}'] = gwf.map(ids_other_ppl, 
+                                                input_other_ppl, 
+                                                name=f"ids_other_{population}")
 
         # combine related and other populations
-        targets[f'combine_files_{population}'] = gwf.map(combine_files, 
-                                 targets['ids_other_ppl_{population}'].outputs, 
-                                 extra = {'population': population, 
-                                          'related':related
-                                          }, 
-                                 name=f"combine_files_{population}")
+        tgt[f'comb_files_{population}'] = gwf.map(combine_files, 
+                                                  tgt['ids_other_{population}'].outputs, 
+                                                  extra = {'population': population, 
+                                                          'related':related
+                                                          }, 
+                                                  name=f"combine_files_{population}")
 
         # list of excluded
-        targets[f'excluded_list_{population}'] = gwf.map(excluded_list, 
-                                      targets[f'combine_files_{population}'].outputs, 
-                                      extra = {'population': population, 
-                                               'haplotype_id':targets['haplotype_id'].outputs['ids']
-                                               }, 
-                                      name=f"excluded_list_{population}")
+        tgt[f'excl_{population}'] = gwf.map(excluded_list, 
+                                            tgt[f'comb_files_{population}'].outputs, 
+                                            extra = {'population': population, 
+                                                     'haplotype_id':tgt['ids'].outputs['ids']
+                                                     }, 
+                                            name=f"excl_{population}")
 
         # list of included
         pop_labels_target = gwf.map(pop_labels, 
-                                    targets[f'excluded_list_{population}'].outputs, 
+                                    tgt[f'excl_{population}'].outputs, 
                                     extra = {'population': population, 
-                                             'poplabels':targets['all_pop_labels'].outputs['poplabels']
+                                             'poplabels':tgt['all_poplab'].outputs['poplabels']
                                              }, 
-                                    name=f"pop_labels_{population}")
-        targets[f"pop_labels_{population}"] = pop_labels_target
+                                    name=f"poplabels_{population}")
+        tgt[f"poplabels_{population}"] = pop_labels_target
 
         # prepare input for relate
-        targets[f"prepare_files_{population}"] = gwf.map(prepare_files, 
-                                 targets[f'excluded_list_{population}'].outputs, 
-                                 extra = {'population': population,                                           
-                                          'haps': targets['convert_vcf'].outputs['haps'],
-                                          'sample': targets['convert_vcf'].outputs['sample'],
-                                          'ancestor': targets['download'].outputs['ancestral_fa'], 
-                                          'mask':targets['download'].outputs['mask'],  
-                                          'poplabels': f'steps/1000g_phased_haplotypes_poplabels.txt'
-                                          },
-                                name=f"prepare_files_{population}")
+        tgt[f"prepare_{population}"] = gwf.map(prepare_files, 
+                                               tgt[f'excl_{population}'].outputs, 
+                                               extra = {'population': population,                                           
+                                                        'haps': tgt['conv_vcf'].outputs['haps'],
+                                                        'sample': tgt['conv_vcf'].outputs['sample'],
+                                                        'ancestor': tgt['download'].outputs['ancestral_fa'], 
+                                                        'mask':tgt['download'].outputs['mask'],  
+                                                        'poplabels': f'steps/relate/poplabels.txt'
+                                                        },
+                                              name=f"prepare_{population}")
 
         # run relate
-        genetic_map = 'steps/genetic_map_chrX.tsv'
-        targets[f"relate_{population}/relate"] = gwf.map(relate, 
-                                    [genetic_map], 
-                                    extra = {'population': population, 
-                                             'haps_relate': targets[f"prepare_files_{population}"].outputs[0]['haps'],
-                                             'sample_relate': targets[f"prepare_files_{population}"].outputs[0]['sample'], 
-                                             'annot_relate': targets[f"prepare_files_{population}"].outputs[0]['annot'], 
-                                             'dist_relate': targets[f"prepare_files_{population}"].outputs[0]['dist'],
-                                             }, 
-                                    name=f"relate_{population}")
+        genetic_map = 'steps/relate/genetic_map_chrX.tsv'
+        tgt[f"relate_{population}"] = gwf.map(relate, 
+                                              [genetic_map], 
+                                              extra = {'population': population, 
+                                                       'haps_relate': tgt[f"prepare_{population}"].outputs[0]['haps'],
+                                                       'sample_relate': tgt[f"prepare_{population}"].outputs[0]['sample'], 
+                                                       'annot_relate': tgt[f"prepare_{population}"].outputs[0]['annot'], 
+                                                       'dist_relate': tgt[f"prepare_{population}"].outputs[0]['dist'],
+                                                       }, 
+                                              name=f"relate_{population}")
 
         # estimate population sizes
-        ppl_size_target = gwf.map(estimate_ppl_size, 
-                                  [f'steps/{population}/relate/1000g_ppl_phased_haplotypes.anc'], 
-                                  extra = {'population': population, 
-                                           'mut_size': targets[f"relate_{population}/relate"].outputs[0]['mut'],
-                                           'poplabels_size':targets[f"relate_{population}/relate"].outputs[0]['anc'],
-                                           }, 
-                                  name=f"estimate_ppl_size_{population}")
-        targets[f"estimate_ppl_size_{population}"] = ppl_size_target
+        tgt[f"demog_{population}"] = gwf.map(estimate_ppl_size, 
+                                             [f'steps/relate/{population}/haplotypes.anc'], 
+                                             extra = {'population': population, 
+                                                      'mut_size': tgt[f"relate_{population}"].outputs[0]['mut'],
+                                                      'poplabels_size':tgt[f"relate_{population}"].outputs[0]['anc'],
+                                                      }, 
+                                             name=f"demog_{population}")
 
         # detect selection
-        detect_selection_target = gwf.map(detect_selection, 
-                                          [f'steps/{population}/relate/1000g_ppl_phased_haplotypes_demog.anc'], 
-                                          extra = {'population': population, 
-                                                   'mut_selection': f'steps/{population}/relate/1000g_ppl_phased_haplotypes_demog.mut', 
-                                             'poplabels_selection': f'steps/{population}/relate/1000g_ppl_phased_haplotypes_demog.mut'
-                                                   }, 
-                                          name=f"detect_selection_{population}")
-        targets[f"detect_selection_{population}"] = detect_selection_target
+        tgt[f"sel_{population}"] = gwf.map(detect_selection, 
+                                           [f'steps/relate/{population}/haplotypes_demog.anc'], 
+                                           extra = {'population': population, 
+                                                    'mut_selection':  tgt[f"demog_{population}"].outputs[0]['mut'], # f'steps/relate/{population}/haplotypes_demog.mut', 
+                                              'poplabels_selection': tgt[f"demog_{population}"].outputs[0]['mut'], # f'steps/relate/{population}/haplotypes_demog.mut'
+                                                    }, 
+                                           name=f"sel_{population}")
 
-        # convert to tree sequence file format (tskit)
-        tree_seq_target = gwf.map(tree_seq, 
-                                  [f'steps/{population}/relate/1000g_ppl_phased_haplotypes.anc'], 
-                                  extra = {'population': population, 
-                                           'mut_convert': f'steps/{population}/relate/1000g_ppl_phased_haplotypes.mut'
-                                           }, 
-                                  name=f"tree_convert_{population}")
-        targets[f"tree_convert_{population}"] = tree_seq_target
-
-    return gwf, targets
+        # convert to tree sequence file format (tskit),
+        tgt[f"trees_{population}"] = gwf.map(tree_seq, 
+                                             [f'steps/relate/{population}/haplotypes.anc'], 
+                                             extra = {'population': population, 
+                                                      'mut_convert': tgt[f"demog_{population}"].outputs[0]['mut'], #f'steps/relate/{population}/haplotypes.mut'
+                                                      }, 
+                                             name=f"trees_{population}")
+            
+    return gwf, tgt
 
 
 
